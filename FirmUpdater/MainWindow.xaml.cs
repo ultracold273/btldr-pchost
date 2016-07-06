@@ -72,6 +72,24 @@ namespace FirmUpdater
 
         private void dw_button_Click(object sender, RoutedEventArgs e)
         {
+            if (srcBinFilePath == null)
+            {
+                MessageBox.Show("No File Selected!");
+                return;
+            }
+            if (!dtTrans.IsOpen)
+            {
+                MessageBox.Show("Serial Port does not Open");
+                return;
+            }
+            // Whether there are current download 
+            if (false)
+            {
+
+            }
+
+            // Open a background thread doing the communication
+            dtTrans.AssignBinFile(srcBinFilePath);
 
         }
 
@@ -79,16 +97,16 @@ namespace FirmUpdater
         {
             try
             {
-                if (port_button.Content.Equals("Open"))//!dataTransferer.IsOpen)
+                if (!dtTrans.IsOpen)
                 {
                     var PortName = spp_name_comboBox.SelectedItem.ToString();
                     var BaudRate = Convert.ToInt32(spp_rate_comboBox.SelectedItem.ToString());
-                    //dataTransferer.CreateNewPort(PortName, BaudRate);
+                    dtTrans.CreateNewPort(PortName, BaudRate);
                     port_button.Content = "Close";
                 }
                 else
                 {
-                    //dataTransferer.Close();
+                    dtTrans.Close();
                     port_button.Content = "Open";
                 }
             }
