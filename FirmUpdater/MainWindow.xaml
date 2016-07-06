@@ -5,8 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FirmUpdater"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="Smart Glove Firmware Updater" Height="145" Width="525" Loaded="window_loaded">
     <Grid>
-        
+        <TextBlock x:Name="hex_file_textBlock" HorizontalAlignment="Left" Margin="96,10,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Height="18" Width="302"/>
+        <Label x:Name="label" Content="HEX File:" HorizontalAlignment="Left" Margin="20,5,0,0" VerticalAlignment="Top" Width="64"/>
+        <Button x:Name="sel_button" Content="Select File" HorizontalAlignment="Left" Margin="410,8,0,0" VerticalAlignment="Top" Width="75" Click="sel_button_Click"/>
+        <Label x:Name="label1" Content="SerialPort:" HorizontalAlignment="Left" Margin="20,36,0,0" VerticalAlignment="Top" Width="64"/>
+        <ComboBox x:Name="spp_name_comboBox" HorizontalAlignment="Left" Margin="96,40,0,0" VerticalAlignment="Top" Width="100"/>
+        <Label x:Name="label2" Content="BaudRate: " HorizontalAlignment="Left" Margin="206,36,0,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="spp_rate_comboBox" HorizontalAlignment="Left" Margin="278,40,0,0" VerticalAlignment="Top" Width="120"/>
+        <Button x:Name="port_button" Content="Open" HorizontalAlignment="Left" Margin="410,40,0,0" VerticalAlignment="Top" Width="75" Click="port_button_Click"/>
+        <Button x:Name="dw_button" Content="Download" HorizontalAlignment="Left" Margin="410,74,0,0" VerticalAlignment="Top" Width="75" Click="dw_button_Click"/>
+        <ProgressBar HorizontalAlignment="Left" Height="20" Margin="25,74,0,0" VerticalAlignment="Top" Width="373"/>
+
     </Grid>
 </Window>
