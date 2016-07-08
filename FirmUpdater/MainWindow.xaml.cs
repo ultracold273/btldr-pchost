@@ -90,7 +90,7 @@ namespace FirmUpdater
 
             // Open a background thread doing the communication
             dtTrans.AssignBinFile(srcBinFilePath);
-
+            dtTrans.ProgramFirmware();
         }
 
         private void port_button_Click(object sender, RoutedEventArgs e)

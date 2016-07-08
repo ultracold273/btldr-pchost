@@ -13,31 +13,30 @@ namespace FirmUpdater
         private FileStream binFile;
         private string hexFileName;
         private string binFileName;
-        private UInt32 Addr;
+        private uint startAddress;
+        private uint endAddress;
         public HexFileReader(string path)
         {
             hexFileName = path;
             binFileName = Path.GetFileName(path).Replace(".hex", ".bin");
-            Addr = 0xFFFFFFFF;
+            startAddress = 0xFFFFFFFF;
+            endAddress = 0x00000000;
         }
 
-        private byte HexParseLine(string line, out byte[] data)
+        private byte HexParseLine(string line, out byte[] data, out uint addr, out byte recLen)
         {
             if (line.Length < 1 || line[0] != ':')
             {
                 data = new byte[0];
+                addr = 0;
+                recLen = 0;
                 return 255;
             }
             byte crc_verify = 0x00;
-            byte recLen = Convert.ToByte(line.Substring(1, 2), 16);
+            recLen = Convert.ToByte(line.Substring(1, 2), 16);
             byte addr_h = Convert.ToByte(line.Substring(3, 2), 16);
             byte addr_l = Convert.ToByte(line.Substring(5, 2), 16);
-            uint addr = (uint) ((addr_h << 8) | addr_l);
-            if (addr < (Addr & 0x0000ffff))
-            {
-                Addr &= 0xffff0000;
-                Addr |= addr;
-            }
+            addr = (uint) ((addr_h << 8) | addr_l);
             byte recType = Convert.ToByte(line.Substring(7, 2), 16);
             crc_verify = (byte) (recLen + addr_h + addr_l + recType);
             data = new byte[recLen];
@@ -56,37 +55,62 @@ namespace FirmUpdater
 
         public void ToBinary()
         {
+            byte[] writeBuffer = new byte[32];
+            uint writeBufferLength = 0;
+            uint phyAddr = 0;
             file = new StreamReader(hexFileName);
             binFile = new FileStream(binFileName, FileMode.Create);
             string line;
             while((line = file.ReadLine()) != null)
             {
-                byte[] data;
-                switch (HexParseLine(line, out data))
+                byte[] recData;
+                uint recAddr;
+                byte recLen;
+                switch (HexParseLine(line, out recData, out recAddr, out recLen))
                 {
                     case 0:
-                        binFile.Write(data, 0, data.Length);
+                        phyAddr &= 0xffff0000;
+                        phyAddr |= recAddr;
+                        if (phyAddr < startAddress) startAddress = phyAddr;
+                        if (phyAddr + recLen > endAddress) endAddress = phyAddr + recLen;
+                        recData.CopyTo(writeBuffer, writeBufferLength);
+                        writeBufferLength += recLen;
+                        if (writeBufferLength >= 16)
+                        {
+                            uint prevLength = writeBufferLength - recLen;
+                            binFile.Write(BitConverter.GetBytes(phyAddr - prevLength), 0, 4);
+                            binFile.Write(writeBuffer, 0, 16);
+                            for(int i = 0;i < writeBufferLength;i++)
+                            {
+                                writeBuffer[i] = writeBuffer[16 + i];
+                            }
+                            phyAddr += (16 - prevLength);
+                            writeBufferLength -= 16;
+                        }
                         break;
                     case 1:
                         break;
                     case 2: break;
                     case 4:
-                        Addr &= 0x0000ffff;
-                        Addr |= (uint) ((data[1] << 24) | (data[0] << 16));
+                        phyAddr &= 0x0000ffff;
+                        phyAddr |= (uint) ((recData[0] << 24) | (recData[1] << 16));
                         break;
                     case 5: break;
                 }
             }
+            if (writeBufferLength > 0)
+            {
+                binFile.Write(BitConverter.GetBytes(phyAddr), 0, 4);
+                for(uint i = writeBufferLength;i < 16;i++)
+                {
+                    writeBuffer[i] = 0xff;
+                }
+                binFile.Write(writeBuffer, 0, 16);
+            }
+            binFile.Write(BitConverter.GetBytes(startAddress), 0, 4);
+            binFile.Write(BitConverter.GetBytes(endAddress), 0, 4);
             file.Close();
             binFile.Close();
-        }
-
-        public UInt32 startAddr
-        {
-            get
-            {
-                return Addr;
-            }
         }
 
         public string bFileName
