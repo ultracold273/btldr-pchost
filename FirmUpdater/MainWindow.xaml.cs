@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Win32;
+using System.ComponentModel;
 
 namespace FirmUpdater
 {
@@ -23,6 +24,7 @@ namespace FirmUpdater
     {
         private DataTransferrer dtTrans;
         private string srcBinFilePath;
+        private BackgroundWorker worker;
 
         public MainWindow()
         {
@@ -42,6 +44,12 @@ namespace FirmUpdater
             string[] ports = dtTrans.GetPorts();
             ports.ToList().ForEach(n => spp_name_comboBox.Items.Add(n));
             spp_name_comboBox.SelectedItem = spp_name_comboBox.Items[spp_name_comboBox.Items.Count - 1];
+            
+            worker = new BackgroundWorker();
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += new DoWorkEventHandler(bgWorker_DoWork);
+            worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+            worker.ProgressChanged += new ProgressChangedEventHandler(process_bar_Update);
         }
 
         private void sel_button_Click(object sender, RoutedEventArgs e)
@@ -90,8 +98,24 @@ namespace FirmUpdater
 
             // Open a background thread doing the communication
             dtTrans.AssignBinFile(srcBinFilePath);
-            dtTrans.ProgramFirmware();
+            //dw_process.Value = 50;
+            worker.RunWorkerAsync(); //dtTrans.ProgramFirmware();
+            //dw_process.Value = 60;
         }
+
+        private void bgWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = sender as BackgroundWorker;
+
+            e.Result = dtTrans.ProgramFirmware(worker, e);
+
+        }
+
+        private void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+
+        }
+
 
         private void port_button_Click(object sender, RoutedEventArgs e)
         {
@@ -114,6 +138,11 @@ namespace FirmUpdater
             {
                 MessageBox.Show(ee.ToString());
             }
+        }
+
+        public void process_bar_Update(object sender, ProgressChangedEventArgs val)
+        {
+            dw_process.Value = val.ProgressPercentage;
         }
     }
 }

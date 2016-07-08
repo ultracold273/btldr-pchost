@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
 using System.IO;
+using System.ComponentModel;
 
 namespace FirmUpdater
 {
@@ -78,7 +79,7 @@ namespace FirmUpdater
             s.Close();
         }
 
-        public byte ProgramFirmware()
+        public byte ProgramFirmware(object sender, DoWorkEventArgs e)
         {
             byte[] packet = new byte[64];
             packet[0] = 0x55;
@@ -90,11 +91,14 @@ namespace FirmUpdater
             int sendByte = ConstructStartPacket(ref packet, startAddress, endAddress);
             if (0 != SendAndGetResponse(ref packet, sendByte)) return 1;
             uint programSize = endAddress - startAddress;
-            uint blocks = (programSize % 128 == 0)?programSize / 128: programSize / 128 + 1;
+            uint blocks = (programSize % 16 == 0)?programSize / 16: programSize / 16 + 1;
             for(uint i = 0;i < blocks;i++)
             {
                 sendByte = ConstructPayloadPacket(ref packet, i);
                 if (0 != SendAndGetResponse(ref packet, sendByte)) return 1;
+                //int percentage = (int) ((float) i / (float)blocks);
+                int percentage = (int)((float)i); // Only For testing / (float)blocks);
+                (sender as BackgroundWorker).ReportProgress(percentage);
             }
             sendByte = ConstructFinishPacket(ref packet);
             if (0 != SendAndGetResponse(ref packet, sendByte)) return 1;
@@ -111,7 +115,7 @@ namespace FirmUpdater
         private int SendAndGetResponse(ref byte[] packet, int sendByte)
         {
             byte[] response = new byte[10];
-            byte iRetry = 0;
+            byte iRetry = 1;
             s.Write(packet, 0, sendByte);
             s.Read(response, 0, 4);
             while (true)
@@ -154,6 +158,7 @@ namespace FirmUpdater
         private int ConstructPayloadPacket(ref byte[] packet, uint block)
         {
             packet[0] = HDR_PAYLOAD; packet[1] = 20; packet[2] = 20; packet[3] = 0;
+            // Fill in the start address
             fs.Read(packet, 4, 4);
             fs.Read(packet, 8, 16);
             Crc32.Calculate(packet, 0, 24).CopyTo(packet, 24);

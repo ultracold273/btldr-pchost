@@ -16,8 +16,8 @@
         <ComboBox x:Name="spp_rate_comboBox" HorizontalAlignment="Left" Margin="278,40,0,0" VerticalAlignment="Top" Width="120"/>
         <Button x:Name="port_button" Content="Open" HorizontalAlignment="Left" Margin="410,40,0,0" VerticalAlignment="Top" Width="75" Click="port_button_Click"/>
         <Button x:Name="dw_button" Content="Download" HorizontalAlignment="Left" Margin="410,74,0,0" VerticalAlignment="Top" Width="75" Click="dw_button_Click"/>
-        <ProgressBar x:Name="dw_process" HorizontalAlignment="Left" Height="20" Margin="25,74,0,0" VerticalAlignment="Top" Width="373"/>
-        <TextBlock x:Name="pb_textBlock" HorizontalAlignment="Left" Margin="25,74,0,0" TextWrapping="Wrap" Text="{Binding ElementName=dw_process, Path=value, StringFormat={}{0:0}%}" VerticalAlignment="Top" Height="20" Width="373"/>
+        <ProgressBar x:Name="dw_process" HorizontalAlignment="Left" Height="20" Margin="25,74,0,0" VerticalAlignment="Top" Width="373" Minimum="0" Value="0"/>
+        <TextBlock x:Name="pb_textBlock" HorizontalAlignment="Left" Margin="25,74,0,0" TextWrapping="Wrap" Text="{Binding ElementName=dw_process, Path=Value, StringFormat={}{0:0}%}" VerticalAlignment="Top" Height="20" Width="373" TextAlignment="Center"/>
 
     </Grid>
 </Window>

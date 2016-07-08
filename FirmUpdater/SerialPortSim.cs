@@ -56,10 +56,12 @@ namespace FirmUpdater
             {
                 Console.Write("0x{0:X} ", buffer[offset + i]);
             }
+            Console.WriteLine();
         }
 
         public void Read(byte[] buffer, int offset, int count)
         {
+            Console.WriteLine("Read {0} bytes: ", count);
             for(int i = 0; i < count;i++)
             {
                 buffer[offset + i] = Convert.ToByte(Console.ReadLine(), 16);
@@ -74,6 +76,7 @@ namespace FirmUpdater
 
         public byte ReadByte()
         {
+            Console.WriteLine("ReadByte: ");
             return Convert.ToByte(Console.ReadLine(), 16);
         }
     }
