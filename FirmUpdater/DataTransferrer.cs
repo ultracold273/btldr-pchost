@@ -16,12 +16,12 @@ namespace FirmUpdater
         private uint startAddress;
         private uint endAddress;
 
-        private const byte HDR_START = 0xA0;
-        private const byte HDR_RESP = 0xA1;
-        private const byte HDR_PAYLOAD = 0xA2;
-        private const byte HDR_RESET = 0xA3;
-        private const byte HDR_FIN = 0xA4;
-        private const byte HDR_HASH = 0xAA;
+        private const byte HDR_START = 0xB0;
+        private const byte HDR_RESP = 0xB1;
+        private const byte HDR_PAYLOAD = 0xB2;
+        private const byte HDR_RESET = 0xB3;
+        private const byte HDR_FIN = 0xB4;
+        private const byte HDR_HASH = 0xBA;
 
         private const byte RES_STT_OK = 0x00;
         private const byte RES_STT_CRC_ERR = 0x01;
@@ -32,6 +32,8 @@ namespace FirmUpdater
         private const byte RES_STT_CRYPTO_ERR = 0x06;
 
         private const byte RET_SYNC_FAIL = 0xFF;
+        private const byte RET_HDR_ERR = 0xFE;
+        private const byte RET_OK = 0x00;
         private static DataTransferrer Instance;
         public static DataTransferrer GetSingleton()
         {
@@ -112,7 +114,7 @@ namespace FirmUpdater
             return 0;
         }
 
-        private int SendAndGetResponse(ref byte[] packet, int sendByte)
+        private byte SendAndGetResponse(ref byte[] packet, int sendByte)
         {
             byte[] response = new byte[10];
             byte iRetry = 1;
@@ -124,9 +126,9 @@ namespace FirmUpdater
                 {
                     sendByte = ConstructResetPacket(ref packet);
                     s.Write(packet, 0, sendByte);
-                    return 1;
+                    return RET_HDR_ERR;
                 }
-                else if (response[1] == RES_STT_OK) return 0;
+                else if (response[1] == RES_STT_OK) return RET_OK;
                 else if ((response[1] == RES_STT_CRC_ERR || response[1] == RES_STT_TIMEOUT) && iRetry <= 3)
                 {
                     ModifyPayloadPacketRetry(ref packet, iRetry);
@@ -138,7 +140,7 @@ namespace FirmUpdater
                 {
                     sendByte = ConstructResetPacket(ref packet);
                     s.Write(packet, 0, sendByte);
-                    return 1;
+                    return response[1];
                 }
             }
         }

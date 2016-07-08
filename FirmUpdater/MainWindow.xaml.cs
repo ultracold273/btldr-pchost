@@ -25,6 +25,7 @@ namespace FirmUpdater
         private DataTransferrer dtTrans;
         private string srcBinFilePath;
         private BackgroundWorker worker;
+        private bool isDownload;
 
         public MainWindow()
         {
@@ -44,7 +45,9 @@ namespace FirmUpdater
             string[] ports = dtTrans.GetPorts();
             ports.ToList().ForEach(n => spp_name_comboBox.Items.Add(n));
             spp_name_comboBox.SelectedItem = spp_name_comboBox.Items[spp_name_comboBox.Items.Count - 1];
-            
+
+            isDownload = false;
+
             worker = new BackgroundWorker();
             worker.WorkerReportsProgress = true;
             worker.DoWork += new DoWorkEventHandler(bgWorker_DoWork);
@@ -91,11 +94,12 @@ namespace FirmUpdater
                 return;
             }
             // Whether there are current download 
-            if (false)
+            if (isDownload)
             {
-
+                return;
             }
 
+            isDownload = true;
             // Open a background thread doing the communication
             dtTrans.AssignBinFile(srcBinFilePath);
             //dw_process.Value = 50;
