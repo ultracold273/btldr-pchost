@@ -15,6 +15,7 @@ namespace FirmUpdater
         private FileStream fs;
         private uint startAddress;
         private uint endAddress;
+        private Crc32 crc;
 
         private const byte HDR_START = 0xB0;
         private const byte HDR_RESP = 0xB1;
@@ -43,6 +44,7 @@ namespace FirmUpdater
         private DataTransferrer()
         {
             s = new SerialPortSim();
+            crc = new Crc32();
         }
 
         public bool IsOpen
@@ -153,7 +155,7 @@ namespace FirmUpdater
             packet[0] = HDR_START; packet[1] = 8; packet[2] = 8; packet[3] = 0;
             BitConverter.GetBytes(startAddress).CopyTo(packet, 4);
             BitConverter.GetBytes(endAddress).CopyTo(packet, 8);
-            Crc32.Calculate(packet, 0, 12).CopyTo(packet, 12);
+            crc.Calculate(packet, 0, 12).CopyTo(packet, 12);
             return 16;     
         }
 
@@ -163,7 +165,7 @@ namespace FirmUpdater
             // Fill in the start address
             fs.Read(packet, 4, 4);
             fs.Read(packet, 8, 16);
-            Crc32.Calculate(packet, 0, 24).CopyTo(packet, 24);
+            crc.Calculate(packet, 0, 24).CopyTo(packet, 24);
             return 28;
         }
 
@@ -176,14 +178,14 @@ namespace FirmUpdater
         private int ConstructFinishPacket(ref byte[] packet)
         {
             packet[0] = HDR_FIN; packet[1] = 0;packet[2] = 0; packet[3] = 0;
-            Crc32.Calculate(packet, 0, 4).CopyTo(packet, 4);
+            crc.Calculate(packet, 0, 4).CopyTo(packet, 4);
             return 8;
         }
 
         private int ConstructResetPacket(ref byte[] packet)
         {
             packet[0] = HDR_RESET; packet[1] = 0;packet[2] = 0; packet[3] = 0;
-            Crc32.Calculate(packet, 0, 4).CopyTo(packet, 4);
+            crc.Calculate(packet, 0, 4).CopyTo(packet, 4);
             return 8;
         }
     }
