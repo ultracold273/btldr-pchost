@@ -73,7 +73,7 @@ namespace FirmUpdater
 
         public string[] GetPorts()
         {
-            return SerialPort.GetPortNames();
+            return SerialPortSim.GetPortNames();
         }
 
         public void Close()
