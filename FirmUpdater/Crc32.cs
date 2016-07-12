@@ -7,109 +7,32 @@ using System.Threading.Tasks;
 
 namespace FirmUpdater
 {
-    public class Crc32 : HashAlgorithm
+    public class Crc32
     {
-        public byte[] Calculate(byte[] inArray, int offset, int count)
+        public const UInt32 DefaultPolynomial = 0x04C11DB7;
+        public const UInt32 DefaultSeed = 0xffffffffu;
+
+        public static byte[] Calculate(byte[] inArray, int offset, int count)
         {
+            /*
             Initialize();
             HashCore(inArray, offset, count);
             //if (count % 4 != 0) throw new Exception("Length shall be multiple of 4");
             return HashFinal();
-        }
-
-        public const UInt32 DefaultPolynomial = 0x04C11DB7;
-        public const UInt32 DefaultSeed = 0xffffffffu;
-
-        static UInt32[] defaultTable;
-
-        readonly UInt32 seed;
-        readonly UInt32[] table;
-        UInt32 hash;
-
-        public Crc32()
-            : this(DefaultPolynomial, DefaultSeed)
-        {
-        }
-
-        public Crc32(UInt32 polynomial, UInt32 seed)
-        {
-            table = InitializeTable(polynomial);
-            this.seed = hash = seed;
-        }
-
-        public override void Initialize()
-        {
-            hash = seed;
-        }
-
-        protected override void HashCore(byte[] array, int ibStart, int cbSize)
-        {
-            hash = CalculateHash(table, hash, array, ibStart, cbSize);
-        }
-
-        protected override byte[] HashFinal()
-        {
-            var hashBuffer = UInt32ToBigEndianBytes(~hash);
-            HashValue = hashBuffer;
-            return hashBuffer;
-        }
-
-        public override int HashSize { get { return 32; } }
-
-        public static UInt32 Compute(byte[] buffer)
-        {
-            return Compute(DefaultSeed, buffer);
-        }
-
-        public static UInt32 Compute(UInt32 seed, byte[] buffer)
-        {
-            return Compute(DefaultPolynomial, seed, buffer);
-        }
-
-        public static UInt32 Compute(UInt32 polynomial, UInt32 seed, byte[] buffer)
-        {
-            return ~CalculateHash(InitializeTable(polynomial), seed, buffer, 0, buffer.Length);
-        }
-
-        static UInt32[] InitializeTable(UInt32 polynomial)
-        {
-            if (polynomial == DefaultPolynomial && defaultTable != null)
-                return defaultTable;
-
-            var createTable = new UInt32[256];
-            for (var i = 0; i < 256; i++)
+            */
+            if (count % 4 != 0) throw new Exception("Length shall be multiple of 4");
+            UInt32 crc = DefaultSeed;
+            for (int i = 0; i < count / 4; i++)
             {
-                var entry = (UInt32)i;
-                for (var j = 0; j < 8; j++)
-                    if ((entry & 1) == 1)
-                        entry = (entry >> 1) ^ polynomial;
-                    else
-                        entry = entry >> 1;
-                createTable[i] = entry;
+                UInt32 data = BitConverter.ToUInt32(inArray, i * 4);
+                crc = crc ^ data;
+                for (int j = 0; j < 32; j++)
+                {
+                    if ((crc & 0x80000000) != 0) crc = (crc << 1) ^ DefaultPolynomial;
+                    else crc = (crc << 1);
+                }
             }
-
-            if (polynomial == DefaultPolynomial)
-                defaultTable = createTable;
-
-            return createTable;
+            return BitConverter.GetBytes(crc);
         }
-
-        static UInt32 CalculateHash(UInt32[] table, UInt32 seed, IList<byte> buffer, int start, int size)
-        {
-            var hash = seed;
-            for (var i = start; i < start + size; i++)
-                hash = (hash >> 8) ^ table[buffer[i] ^ hash & 0xff];
-            return hash;
-        }
-
-        static byte[] UInt32ToBigEndianBytes(UInt32 uint32)
-        {
-            var result = BitConverter.GetBytes(uint32);
-
-            if (BitConverter.IsLittleEndian)
-                Array.Reverse(result);
-
-            return result;
-        }
-    }
+    }   
 }

@@ -100,8 +100,8 @@ namespace FirmUpdater
             {
                 sendByte = ConstructPayloadPacket(ref packet, i);
                 if (0 != SendAndGetResponse(ref packet, sendByte)) return 1;
-                //int percentage = (int) ((float) i / (float)blocks);
-                int percentage = (int)((float)i); // Only For testing / (float)blocks);
+                int percentage = (int) (100 * i / (float)blocks);
+                //int percentage = (int)((float)i); // Only For testing / (float)blocks);
                 (sender as BackgroundWorker).ReportProgress(percentage);
             }
             sendByte = ConstructFinishPacket(ref packet);
@@ -155,7 +155,7 @@ namespace FirmUpdater
             packet[0] = HDR_START; packet[1] = 8; packet[2] = 8; packet[3] = 0;
             BitConverter.GetBytes(startAddress).CopyTo(packet, 4);
             BitConverter.GetBytes(endAddress).CopyTo(packet, 8);
-            crc.Calculate(packet, 0, 12).CopyTo(packet, 12);
+            Crc32.Calculate(packet, 0, 12).CopyTo(packet, 12);
             return 16;     
         }
 
@@ -165,7 +165,7 @@ namespace FirmUpdater
             // Fill in the start address
             fs.Read(packet, 4, 4);
             fs.Read(packet, 8, 16);
-            crc.Calculate(packet, 0, 24).CopyTo(packet, 24);
+            Crc32.Calculate(packet, 0, 24).CopyTo(packet, 24);
             return 28;
         }
 
@@ -178,14 +178,14 @@ namespace FirmUpdater
         private int ConstructFinishPacket(ref byte[] packet)
         {
             packet[0] = HDR_FIN; packet[1] = 0;packet[2] = 0; packet[3] = 0;
-            crc.Calculate(packet, 0, 4).CopyTo(packet, 4);
+            Crc32.Calculate(packet, 0, 4).CopyTo(packet, 4);
             return 8;
         }
 
         private int ConstructResetPacket(ref byte[] packet)
         {
             packet[0] = HDR_RESET; packet[1] = 0;packet[2] = 0; packet[3] = 0;
-            crc.Calculate(packet, 0, 4).CopyTo(packet, 4);
+            Crc32.Calculate(packet, 0, 4).CopyTo(packet, 4);
             return 8;
         }
     }

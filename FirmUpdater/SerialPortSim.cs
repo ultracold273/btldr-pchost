@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Ports;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -10,6 +11,7 @@ namespace FirmUpdater
 
     class SerialPortSim
     {
+        SerialPort s;
         [DllImport("kernel32.dll")]
         private static extern bool AllocConsole();
 
@@ -18,35 +20,42 @@ namespace FirmUpdater
 
         public bool IsOpen
         {
-            get;set;
+            get
+            {
+                return s.IsOpen;
+            }
         }
 
         public SerialPortSim(string portname, int baudrate)
         {
-            IsOpen = false;
+            s = new SerialPort(portname, baudrate);
         }
 
         public SerialPortSim()
         {
-            IsOpen = false;
+            s = new SerialPort();
+            //IsOpen = false;
         }
 
         public static string[] GetPortNames()
         {
-            string[] names = new string[] {"COM1", "COM2", "COM6" };
-            return names;
+            //string[] names = new string[] {"COM1", "COM2", "COM6" };
+            //return names;
+            return SerialPort.GetPortNames();
         }
 
         public void Open()
         {
             AllocConsole();
-            IsOpen = true;
+            s.Open();
+            //IsOpen = true;
         }
 
         public void Close()
         {
             FreeConsole();
-            IsOpen = false;
+            s.Close();
+            //IsOpen = false;
         }
 
         public void Write(byte[] buffer, int offset, int count)
@@ -57,14 +66,17 @@ namespace FirmUpdater
                 Console.Write("0x{0:X} ", buffer[offset + i]);
             }
             Console.WriteLine();
+            s.Write(buffer, offset, count);
         }
 
         public void Read(byte[] buffer, int offset, int count)
         {
+            s.Read(buffer, offset, count);
             Console.WriteLine("Read {0} bytes: ", count);
             for(int i = 0; i < count;i++)
             {
-                buffer[offset + i] = Convert.ToByte(Console.ReadLine(), 16);
+                //buffer[offset + i] = Convert.ToByte(Console.ReadLine(), 16);
+                Console.WriteLine("0x{0:X} ", buffer[offset + i]);
             }
         }
 
@@ -77,7 +89,9 @@ namespace FirmUpdater
         public byte ReadByte()
         {
             Console.WriteLine("ReadByte: ");
-            return Convert.ToByte(Console.ReadLine(), 16);
+            byte a = (byte) s.ReadByte();
+            Console.WriteLine("0x{0:X}", a);
+            return a;
         }
     }
 }
