@@ -117,8 +117,16 @@ namespace FirmUpdater
 
         private void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            dw_process.Value = dw_process.Maximum;
-            MessageBox.Show("Done");
+            if ((int) e.Result == 0)
+            {
+                dw_process.Value = dw_process.Maximum;
+                MessageBox.Show("Done");
+            }
+            else
+            {
+                dw_process.Value = dw_process.Minimum;
+                MessageBox.Show("Error!");
+            }
         }
 
 

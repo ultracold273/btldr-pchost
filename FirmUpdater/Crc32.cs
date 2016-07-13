@@ -14,12 +14,6 @@ namespace FirmUpdater
 
         public static byte[] Calculate(byte[] inArray, int offset, int count)
         {
-            /*
-            Initialize();
-            HashCore(inArray, offset, count);
-            //if (count % 4 != 0) throw new Exception("Length shall be multiple of 4");
-            return HashFinal();
-            */
             if (count % 4 != 0) throw new Exception("Length shall be multiple of 4");
             UInt32 crc = DefaultSeed;
             for (int i = 0; i < count / 4; i++)

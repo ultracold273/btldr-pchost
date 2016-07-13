@@ -26,6 +26,14 @@ namespace FirmUpdater
             }
         }
 
+        public int BytesToRead
+        {
+            get
+            {
+                return s.BytesToRead;
+            }
+        }
+
         public SerialPortSim(string portname, int baudrate)
         {
             s = new SerialPort(portname, baudrate);
@@ -78,6 +86,12 @@ namespace FirmUpdater
                 //buffer[offset + i] = Convert.ToByte(Console.ReadLine(), 16);
                 Console.WriteLine("0x{0:X} ", buffer[offset + i]);
             }
+        }
+
+        public void ReadBlock(byte[] buffer, int offset, int count)
+        {
+            while (s.BytesToRead < count) ;
+            Read(buffer, offset, count);
         }
 
         public void WriteByte(byte a)

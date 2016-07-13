@@ -93,19 +93,19 @@ namespace FirmUpdater
                 return RET_SYNC_FAIL;
             }
             int sendByte = ConstructStartPacket(ref packet, startAddress, endAddress);
-            if (0 != SendAndGetResponse(ref packet, sendByte)) return 1;
+            if (0 != SendAndGetResponse(ref packet, sendByte)) return RET_HDR_ERR;
             uint programSize = endAddress - startAddress;
             uint blocks = (programSize % 16 == 0)?programSize / 16: programSize / 16 + 1;
             for(uint i = 0;i < blocks;i++)
             {
                 sendByte = ConstructPayloadPacket(ref packet, i);
-                if (0 != SendAndGetResponse(ref packet, sendByte)) return 1;
+                if (0 != SendAndGetResponse(ref packet, sendByte)) return RET_HDR_ERR;
                 int percentage = (int) (100 * i / (float)blocks);
                 //int percentage = (int)((float)i); // Only For testing / (float)blocks);
                 (sender as BackgroundWorker).ReportProgress(percentage);
             }
             sendByte = ConstructFinishPacket(ref packet);
-            if (0 != SendAndGetResponse(ref packet, sendByte)) return 1;
+            if (0 != SendAndGetResponse(ref packet, sendByte)) return RET_HDR_ERR;
             packet[0] = 0xAA;
             s.Write(packet, 0, 1);
             if (s.ReadByte() != 0x55)
@@ -113,7 +113,7 @@ namespace FirmUpdater
                 return RET_SYNC_FAIL;
             }
 
-            return 0;
+            return RET_OK;
         }
 
         private byte SendAndGetResponse(ref byte[] packet, int sendByte)
@@ -121,7 +121,7 @@ namespace FirmUpdater
             byte[] response = new byte[10];
             byte iRetry = 1;
             s.Write(packet, 0, sendByte);
-            s.Read(response, 0, 4);
+            s.ReadBlock(response, 0, 4);
             while (true)
             {
                 if (response[0] != HDR_RESP)
@@ -135,7 +135,7 @@ namespace FirmUpdater
                 {
                     ModifyPayloadPacketRetry(ref packet, iRetry);
                     s.Write(packet, 0, sendByte);
-                    s.Read(response, 0, 4);
+                    s.ReadBlock(response, 0, 4);
                     iRetry++;
                 }
                 else
