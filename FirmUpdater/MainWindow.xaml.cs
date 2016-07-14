@@ -68,6 +68,7 @@ namespace FirmUpdater
                     {
                         HexFileReader fileReader = new HexFileReader(openHexFileDialog.FileName);
                         fileReader.ToBinary();
+                        fileReader.WriteHash();
                         srcBinFilePath = fileReader.bFileName;
                     }else
                     {
@@ -117,7 +118,8 @@ namespace FirmUpdater
 
         private void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if ((int) e.Result == 0)
+            int res = (int) e.Result;
+            if (res == 0)
             {
                 dw_process.Value = dw_process.Maximum;
                 MessageBox.Show("Done");
@@ -128,8 +130,7 @@ namespace FirmUpdater
                 MessageBox.Show("Error!");
             }
         }
-
-
+        
         private void port_button_Click(object sender, RoutedEventArgs e)
         {
             try

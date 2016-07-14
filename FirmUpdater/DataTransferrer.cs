@@ -15,6 +15,7 @@ namespace FirmUpdater
         private FileStream fs;
         private uint startAddress;
         private uint endAddress;
+        private byte[] hash;
         private Crc32 crc;
 
         private const byte HDR_START = 0xB0;
@@ -45,6 +46,7 @@ namespace FirmUpdater
         {
             s = new SerialPortSim();
             crc = new Crc32();
+            hash = new byte[20];
         }
 
         public bool IsOpen
@@ -65,11 +67,12 @@ namespace FirmUpdater
         {
             byte[] temp = new byte[4];
             fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-            fs.Position = fs.Length - 8;
+            fs.Position = fs.Length - 28;
             fs.Read(temp, 0, 4);
             startAddress = BitConverter.ToUInt32(temp, 0);
             fs.Read(temp, 0, 4);
             endAddress = BitConverter.ToUInt32(temp, 0);
+            fs.Read(hash, 0, 20);
             fs.Position = 0;
         }
 
@@ -104,6 +107,8 @@ namespace FirmUpdater
                 //int percentage = (int)((float)i); // Only For testing / (float)blocks);
                 (sender as BackgroundWorker).ReportProgress(percentage);
             }
+            sendByte = ConstructHashPacket(ref packet);
+            if (0 != SendAndGetResponse(ref packet, sendByte)) return RET_HDR_ERR;
             sendByte = ConstructFinishPacket(ref packet);
             if (0 != SendAndGetResponse(ref packet, sendByte)) return RET_HDR_ERR;
             packet[0] = 0xAA;
@@ -173,6 +178,14 @@ namespace FirmUpdater
         {
             packet[3] = iRetry;
             return;
+        }
+
+        private int ConstructHashPacket(ref byte[] packet)
+        {
+            packet[0] = HDR_HASH; packet[1] = 20;packet[2] = 20;packet[3] = 0;
+            for (int i = 0; i < 20; i++) packet[4 + i] = hash[i];
+            Crc32.Calculate(packet, 0, 24).CopyTo(packet, 24);
+            return 28;
         }
 
         private int ConstructFinishPacket(ref byte[] packet)

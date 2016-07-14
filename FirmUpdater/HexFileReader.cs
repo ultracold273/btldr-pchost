@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Security.Cryptography;
 
 namespace FirmUpdater
 {
@@ -110,6 +111,40 @@ namespace FirmUpdater
             binFile.Write(BitConverter.GetBytes(startAddress), 0, 4);
             binFile.Write(BitConverter.GetBytes(endAddress), 0, 4);
             file.Close();
+            binFile.Close();
+        }
+
+        public byte[] Sha1Hash()
+        {   
+            file = new StreamReader(hexFileName);
+            SHA1 a = new SHA1CryptoServiceProvider();
+            string line;
+            byte[] recData = new byte[20];
+            uint recAddr;
+            byte recLen;
+            a.TransformBlock(BitConverter.GetBytes(startAddress), 0, 4, recData, 0);
+            a.TransformBlock(BitConverter.GetBytes(endAddress), 0, 4, recData, 0);
+            while ((line = file.ReadLine()) != null)
+            {
+                
+                switch (HexParseLine(line, out recData, out recAddr, out recLen))
+                {
+                    case 0:
+                        a.TransformBlock(recData, 0, recLen, recData, 0);
+                        break;
+                    default: break;
+                }
+            }
+            a.TransformFinalBlock(recData, 0, 0);
+            return a.Hash;
+        }
+
+        public void WriteHash()
+        {
+            byte[] hash = Sha1Hash();
+            binFile = new FileStream(binFileName, FileMode.Open);
+            binFile.Position = binFile.Length;
+            binFile.Write(hash, 0, 20);
             binFile.Close();
         }
 
